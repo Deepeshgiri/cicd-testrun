@@ -9,21 +9,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Optional: run tests locally on GitHub runner
-      - name: Setup Node
+      - name: Setup Node and run tests
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-      - name: Install dependencies
-        run: npm install
-      - name: Run tests
-        run: npm test
+        run: |
+          npm install
+          npm test
 
-      # Step 3: Deploy to your server
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -33,8 +29,36 @@ jobs:
           port: 2022
           script: |
             set -e
-            cd ${{ secrets.APP_DIR }}
-            git reset --hard origin/main   # ensure latest code
+            echo "=== Starting Deployment ==="
+            echo "Current directory: $(pwd)"
+            echo "Target directory: ${{ secrets.APP_DIR }}"
+            
+            # Navigate to app directory
+            cd ${{ secrets.APP_DIR }} || { echo "❌ Failed to cd to ${{ secrets.APP_DIR }}"; exit 1; }
+            echo "✅ Successfully changed to $(pwd)"
+            
+            # Check if git repo exists
+            if [ ! -d .git ]; then
+              echo "❌ Not a git repository"
+              exit 1
+            fi
+            
+            echo "=== Git Operations ==="
+            git fetch origin
+            git reset --hard origin/main
             git pull origin main
+            echo "✅ Git operations completed"
+            
+            echo "=== Docker Operations ==="
+            # Check if docker-compose exists
+            if ! command -v docker-compose &> /dev/null; then
+              echo "❌ docker-compose not found"
+              exit 1
+            fi
+            
             docker-compose down
             docker-compose up -d --build
+            
+            echo "=== Verification ==="
+            docker ps
+            echo "✅ Deployment completed successfully!"
