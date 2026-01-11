@@ -16,9 +16,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-        run: |
-          npm install
-          npm test
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
