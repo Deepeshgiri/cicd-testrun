@@ -7,6 +7,9 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend API running', time: new Date() });
 });
 
+app.get('/test', (req, res) => {
+  res.json({ message: 'pata h nhi Backend API running', time: new Date() });
+});
 // Listen on all interfaces
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
