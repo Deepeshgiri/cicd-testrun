@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/test', (req, res) => {
-  res.json({ message: 'pata h nhi Backend API running', time: new Date() });
+  res.json({ message: 'seems like i can run without you', time: new Date() });
 });
 // Listen on all interfaces
 app.listen(port, '0.0.0.0', () => {
