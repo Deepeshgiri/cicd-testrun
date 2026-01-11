@@ -13,27 +13,49 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Optional: run tests locally on GitHub runner
+      # Step 2: Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-      - name: Install dependencies
-        run: npm install
-      - name: Run tests
-        run: npm test
+          
+      # Step 3: Install dependencies and run tests
+      - name: Install dependencies and run tests
+        run: |
+          npm install
+          npm test
 
-      # Step 3: Deploy to your server
+      # Step 4: Deploy to VM
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          port: 2022
           script: |
             set -e
-            cd ${{ secrets.APP_DIR }}
-            git reset --hard origin/main   # ensure latest code
+            echo "=== Starting Deployment ==="
+            echo "Current directory: $(pwd)"
+            
+            # Use a variable for the directory
+            APP_DIR="/home/ubuntu/docker/backend"
+            echo "Target directory: $APP_DIR"
+            
+            # Navigate to app directory
+            cd "$APP_DIR"
+            echo "✅ Successfully changed to $(pwd)"
+            
+            echo "=== Git Operations ==="
+            git fetch origin
+            git reset --hard origin/main
             git pull origin main
+            echo "✅ Git operations completed"
+            
+            echo "=== Docker Operations ==="
             docker-compose down
             docker-compose up -d --build
+            
+            echo "=== Verification ==="
+            docker ps
+            echo "✅ Deployment completed successfully!"
