@@ -9,17 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node and run tests
+      # Step 2: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+          
+      # Step 3: Install dependencies and run tests
+      - name: Install dependencies and run tests
         run: |
           npm install
           npm test
 
+      # Step 4: Deploy to VM
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -29,15 +35,27 @@ jobs:
           port: 2022
           script: |
             set -e
-            cd /home/ubuntu/docker/backend
+            echo "=== Starting Deployment ==="
+            echo "Current directory: $(pwd)"
             
-            # Simple git operations
+            # Use a variable for the directory
+            APP_DIR="/home/ubuntu/docker/backend"
+            echo "Target directory: $APP_DIR"
+            
+            # Navigate to app directory
+            cd "$APP_DIR"
+            echo "✅ Successfully changed to $(pwd)"
+            
+            echo "=== Git Operations ==="
             git fetch origin
             git reset --hard origin/main
             git pull origin main
+            echo "✅ Git operations completed"
             
-            # Docker operations
+            echo "=== Docker Operations ==="
             docker-compose down
             docker-compose up -d --build
             
-            echo "Deployment successful!"
+            echo "=== Verification ==="
+            docker ps
+            echo "✅ Deployment completed successfully!"
